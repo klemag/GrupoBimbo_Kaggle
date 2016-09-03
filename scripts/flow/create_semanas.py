@@ -2,11 +2,14 @@ import pandas as pd
 import parameters as p
 import numpy as np
 
-## Generate Lag features
-## Getting the average demand for a given product/cliente during the past weeks
+# Generate Lag features
+# Getting the average demand for a given product/cliente during the past weeks
+
+
 def get_lag_features(data, prev_week, lag, target):
 
-    # Apply a suffix to the feature name in case we use venta_hoy and not Demanda_uni_equil
+    # Apply a suffix to the feature name in case we use venta_hoy and not
+    # Demanda_uni_equil
     if target == 'Venta_hoy':
         suffix = '_venta'
     else:
@@ -15,8 +18,6 @@ def get_lag_features(data, prev_week, lag, target):
     # Get average demand from last week and rename the target column
     mean_demanda = prev_week[target].mean()
     prev_week.columns = prev_week.columns.str.replace(target, 'Demanda_prev')
-    # prev_week['Demanda_prev'] = prev_week[target]
-    # prev_week = prev_week.drop(target, axis=1)
 
     # Generate a few groupby tables for easy lookup later
     mean_by_cliente = prev_week.loc[:, ['Cliente_ID', 'Demanda_prev']].groupby(
@@ -36,21 +37,22 @@ def get_lag_features(data, prev_week, lag, target):
                           usecols=['Cliente_ID', 'NombreCliente', 'ClienteGroup'])
 
     # ... and merge them with the prev_week & data
-    prev_week = pd.merge(prev_week, clients, on='Cliente_ID').drop('Cliente_ID', axis=1)
+    prev_week = pd.merge(prev_week, clients, on='Cliente_ID').drop(
+        'Cliente_ID', axis=1)
     prev_week = pd.merge(prev_week, products, on='Producto_ID')
     data = pd.merge(data, clients, on='Cliente_ID')
     data = pd.merge(data, products, on='Producto_ID')
     del clients, products
 
     # First attempt at finding lag features, need same product_ID + cliente:
-    ## On 'Producto_ID', 'NombreCliente', 'ClienteGroup', 'Brand', 'Product'
+    # On 'Producto_ID', 'NombreCliente', 'ClienteGroup', 'Brand', 'Product'
 
     prev_week = prev_week.groupby(by=['Producto_ID', 'NombreCliente', 'ClienteGroup', 'Brand', 'Product'],
                                   as_index=False).mean()
     data['Lag_{}w{}'.format(lag, suffix)] = pd.merge(data, prev_week,
-                                                        on=['Producto_ID', 'NombreCliente',
-                                                            'ClienteGroup', 'Brand', 'Product'],
-                                                        how='left')['Demanda_prev'].values
+                                                     on=['Producto_ID', 'NombreCliente',
+                                                         'ClienteGroup', 'Brand', 'Product'],
+                                                     how='left')['Demanda_prev'].values
     still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
     print('Still need {} to fill'.format(still_to_fill))
 
@@ -65,7 +67,8 @@ def get_lag_features(data, prev_week, lag, target):
                 lag, suffix)].isnull()], prev_week,
             on=['NombreCliente', 'ClienteGroup', 'Brand', 'Product'],
             how='left')['Demanda_prev'].values
-        still_to_fill = len(data.loc[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data.loc[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     # Third attempt:
@@ -77,7 +80,8 @@ def get_lag_features(data, prev_week, lag, target):
                 lag, suffix)].isnull()], mean_by_prod_ruta,
             on=['Producto_ID', 'Ruta_SAK'],
             how='left')['Demanda_prev'].values
-        still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     # Fourth attempt:
@@ -89,7 +93,8 @@ def get_lag_features(data, prev_week, lag, target):
                 lag, suffix)].isnull()], mean_by_prod_agencia,
             on=['Producto_ID', 'Agencia_ID'],
             how='left')['Demanda_prev'].values
-        still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     # Fifth attempt:
@@ -103,7 +108,8 @@ def get_lag_features(data, prev_week, lag, target):
                 lag, suffix)].isnull()], prev_week,
             on=['ClienteGroup', 'Brand', 'Product'],
             how='left')['Demanda_prev'].values
-        still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     # Sixth attempt:
@@ -117,7 +123,8 @@ def get_lag_features(data, prev_week, lag, target):
                 lag, suffix)].isnull()], prev_week,
             on=['ClienteGroup', 'Brand'],
             how='left')['Demanda_prev'].values
-        still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     # Seventh attempt:
@@ -130,7 +137,8 @@ def get_lag_features(data, prev_week, lag, target):
                 lag, suffix)].isnull()], prev_week,
             on=['Brand'],
             how='left')['Demanda_prev'].values
-        still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     # Eights attempt:
@@ -142,7 +150,8 @@ def get_lag_features(data, prev_week, lag, target):
                 lag, suffix)].isnull()], mean_by_cliente,
             on=['Cliente_ID'],
             how='left')['Demanda_prev'].values
-        still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     # Giving up and taking the mean
@@ -151,16 +160,18 @@ def get_lag_features(data, prev_week, lag, target):
         # Finally ...
         data.loc[data['Lag_{}w{}'.format(lag, suffix)].isnull(),
                  'Lag_{}w{}'.format(lag, suffix)] = mean_demanda
-        still_to_fill = len(data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
+        still_to_fill = len(
+            data[data['Lag_{}w{}'.format(lag, suffix)].isnull()])
         print('Still need {} to fill'.format(still_to_fill))
 
     return data.drop(['NombreCliente', 'ClienteGroup', 'Brand', 'Product'], axis=1)
 
-## Build the weekly data with all lag features
+# Build the weekly data with all lag features
 if __name__ == "__main__":
 
     # Load train data
-    table = pd.read_csv('{}/inputs/train.csv'.format(p.DIR_ROOT), dtype=p.DtypeMain)
+    table = pd.read_csv(
+        '{}/inputs/train.csv'.format(p.DIR_ROOT), dtype=p.DtypeMain)
 
     # Start by processing weeks 3 to 10 (aka train data)
     for x in range(3, 10):
@@ -184,7 +195,8 @@ if __name__ == "__main__":
                                                  'Canal_ID', 'Demanda_uni_equil'], dtype=p.DtypeMain)
 
                 # Get lag features for Demanda_uni_equil
-                week = get_lag_features(week, prev_week, lag, 'Demanda_uni_equil')
+                week = get_lag_features(
+                    week, prev_week, lag, 'Demanda_uni_equil')
 
                 # get lag 2-5weeks for Venta_hoy
                 if lag > 1:
@@ -193,12 +205,13 @@ if __name__ == "__main__":
                     # Load previous week with venta_hoy
                     prev_week = pd.read_csv('{}/pipeline/by_week/semana_{}.csv'.format(p.DIR_ROOT, x - lag),
                                             usecols=['Cliente_ID', 'Producto_ID', 'Ruta_SAK', 'Agencia_ID',
-                                                     'Canal_ID', 'Venta_hoy'],dtype=p.DtypeMain)
+                                                     'Canal_ID', 'Venta_hoy'], dtype=p.DtypeMain)
                     week = get_lag_features(week, prev_week, lag, 'Venta_hoy')
 
         # Write down the week data
         print('Writing down week {}'.format(x))
-        week.to_csv('{}/pipeline/by_week/semana_{}.csv'.format(p.DIR_ROOT, x), index=False)
+        week.to_csv(
+            '{}/pipeline/by_week/semana_{}.csv'.format(p.DIR_ROOT, x), index=False)
 
     del table
 
@@ -206,7 +219,8 @@ if __name__ == "__main__":
     # We will not be able to get the 1week lag for week 11 as we need to
     # predict Demanda_uni_equil for week 10 first ...
     print('Getting test tables')
-    test = pd.read_csv('{}/inputs/test.csv'.format(p.DIR_ROOT), dtype=p.DtypeMain)
+    test = pd.read_csv(
+        '{}/inputs/test.csv'.format(p.DIR_ROOT), dtype=p.DtypeMain)
 
     for x in range(10, 12):
 
@@ -241,5 +255,6 @@ if __name__ == "__main__":
 
         # Writing down test week
         print('Writing down week {}'.format(x))
-        week.to_csv('{}/pipeline/by_week/semana_{}.csv'.format(p.DIR_ROOT, x), index=False)
+        week.to_csv(
+            '{}/pipeline/by_week/semana_{}.csv'.format(p.DIR_ROOT, x), index=False)
     del test
