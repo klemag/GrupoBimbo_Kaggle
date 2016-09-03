@@ -1,6 +1,7 @@
 # GrupoBimbo_Kaggle
 
 This workflow was built to create a model for the Kaggle competition GrupoBimbo
+
 Link to the competition: https://www.kaggle.com/c/grupo-bimbo-inventory-demand
 
 GrupoBimbo is a Mexican bakery product manufacturing company.
@@ -30,7 +31,7 @@ If PCA_ON is True in parameters.py, a PCA model will also be generated. Tune the
 
 5 - Find good parameters for the model. Use model_selection.py to find optimal (well, good...) parameters to train the xgb model. Needs dmatrices to be generated before. Will return a txt file with the best parameters found.
 
-6 - Ready to train. Two training mode are available:
+6 - Ready to train. Two training modes are available:
     
     a) Fraction mode: This will reuse the DMatrix generated with build_dmatrices.py. This mode allows early_stopping_rounds and watchlist. Meaning that whilst training the model, after each round the RMSLE will be calculated and displayed. If the RMSLE is not improved for a given number of rounds the training stops, avoiding overfitting. This mode also comes with the possibility to use PCA for dimension reduction.
     
