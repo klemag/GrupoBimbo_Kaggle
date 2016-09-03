@@ -32,11 +32,18 @@ If PCA_ON is True in parameters.py, a PCA model will also be generated. Tune the
 5 - Find good parameters for the model. Use model_selection.py to find optimal (well, good...) parameters to train the xgb model. Needs dmatrices to be generated before. Will return a txt file with the best parameters found.
 
 6 - Ready to train. Two training modes are available:
+
+	a) Fraction mode: This will reuse the DMatrix generated with build_dmatrices.py. 
+	This mode allows early_stopping_rounds and watchlist. Meaning that whilst training the model, after each round the RMSLE will be calculated and displayed. 
+	If the RMSLE is not improved for a given number of rounds the training stops, avoiding overfitting. 
+	This mode also comes with the possibility to use PCA for dimension reduction.
+	
+	b) Ensemble mode: This will split the data into N_SAMPLES (from parameters.py) and create a new model for each. 
+	All predictions will then be averaged to get a more stable prediction. 
+	PCA and watchlist are not supported with this mode.
     
-    a) Fraction mode: This will reuse the DMatrix generated with build_dmatrices.py. This mode allows early_stopping_rounds and watchlist. Meaning that whilst training the model, after each round the RMSLE will be calculated and displayed. If the RMSLE is not improved for a given number of rounds the training stops, avoiding overfitting. This mode also comes with the possibility to use PCA for dimension reduction.
-    
-    b) Ensemble mode: This will split the data into N_SAMPLES (from parameters.py) and create a new model for each. All predictions will then be averaged to get a more stable prediction. PCA and watchlist are not supported with this mode.
-    
-    Select the TRAINING_MODE in parameters.py. Both modes come with the possibility to inject one or several old prediction(s) whilst generating a new one. This will average the current week 10 with the old ones and predict the week 11 using better previous week demand data. Add files to inject into WEEK10_OLD_PRED.
+    Select the TRAINING_MODE in parameters.py and use ./scripts/flow/train.py to start training the model. 
+    Both modes come with the possibility to inject one or several old prediction(s) whilst generating a new one. 
+    This will average the current week 10 with the old ones and predict the week 11 using better previous week demand data. Add files to inject into WEEK10_OLD_PRED.
     
 7 - Submissions are saved in ./outputs/submission_DATETIME
